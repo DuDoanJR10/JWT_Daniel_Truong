@@ -5,6 +5,7 @@ const mongoose = require('mongoose');
 const cookieParsers = require('cookie-parser');
 const cookieParser = require('cookie-parser');
 const authRoute = require('./routes/auth');
+const userRoute = require('./routes/user');
 
 const app = express();
 app.use(cors());
@@ -24,5 +25,6 @@ mongoose
     });
 
 app.use("/v1/auth", authRoute);
+app.use("/v1/user", userRoute);
 
 app.listen(8000, () => console.log('Server is running'))
