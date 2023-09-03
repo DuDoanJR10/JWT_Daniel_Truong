@@ -4,6 +4,7 @@ const dotenv = require('dotenv');
 const mongoose = require('mongoose');
 const cookieParsers = require('cookie-parser');
 const cookieParser = require('cookie-parser');
+const authRoute = require('./routes/auth');
 
 const app = express();
 app.use(cors());
@@ -21,5 +22,7 @@ mongoose
     .catch((err) => {
         console.log(err);
     });
+
+app.use("/v1/auth", authRoute);
 
 app.listen(8000, () => console.log('Server is running'))
