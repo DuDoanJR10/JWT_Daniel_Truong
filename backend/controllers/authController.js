@@ -2,9 +2,12 @@ const bcrypt = require('bcrypt');
 const User = require('../models/User');
 const jwt = require('jsonwebtoken');
 
+// Fake database
+let refreshTokens = [];
+
 const authController = {
     // POST: /v1/auth/register
-    registerUser: async(req, res) => {
+    registerUser: async (req, res) => {
         try {
             // Hash password
             const salt = await bcrypt.genSalt(10);
@@ -27,7 +30,7 @@ const authController = {
     },
     generateAccessToken: (user) => {
         return jwt.sign({ id: user.id, admin: user.admin }, process.env.ACCESS_TOKEN_SECRET_KEY, {
-            expiresIn: '30s'
+            expiresIn: '20s'
         });
     },
     generateRefreshToken: (user) => {
@@ -52,7 +55,7 @@ const authController = {
             if (user && validPassword) {
                 const accessToken = authController.generateAccessToken(user);
                 const refreshToken = authController.generateRefreshToken(user);
-
+                refreshTokens.push(refreshToken);
                 // Save refreshToken to cookie
                 res.cookie("refreshToken", refreshToken, {
                     httpOnly: true,
@@ -61,9 +64,39 @@ const authController = {
                     sameSite: "strict" // Prevent attack CSRF 
                 })
 
-                const { password, ...others } = user._doc; 
+                const { password, ...others } = user._doc;
                 res.status(200).json({ ...others, accessToken });
             }
+        } catch (err) {
+            res.status(500).json(err);
+        }
+    },
+    refreshToken: async (req, res) => {
+        try {
+            const refreshToken = req.cookies.refreshToken;
+            if (!refreshToken) return res.status(401).json("You're not authenticated!");
+            if (!refreshTokens.includes(refreshToken)) return res.status(403).json("Refresh token is invalid!");
+            jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET_KEY,
+                (err, user) => {
+                    if (err) {
+                        console.log(err);
+                    } else {
+                        refreshTokens = refreshTokens.filter(token => token !== refreshToken);
+
+                        const newAccessToken = authController.generateAccessToken(user);
+                        const newRefreshToken = authController.generateRefreshToken(user);
+                        refreshTokens.push(newRefreshToken);
+                        // Save refreshToken to cookie
+                        res.cookie("refreshToken", newRefreshToken, {
+                            httpOnly: true,
+                            secure: false,
+                            path: '/',
+                            sameSite: "strict" // Prevent attack CSRF 
+                        })
+                        res.status(200).json({ accessToken: newAccessToken });
+                    }
+                }
+            )
         } catch (err) {
             res.status(500).json(err);
         }
