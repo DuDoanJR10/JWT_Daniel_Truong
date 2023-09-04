@@ -25,6 +25,16 @@ const authController = {
             res.status(500).json(err);
         }
     },
+    generateAccessToken: (user) => {
+        return jwt.sign({ id: user.id, admin: user.admin }, process.env.ACCESS_TOKEN_SECRET_KEY, {
+            expiresIn: '30s'
+        });
+    },
+    generateRefreshToken: (user) => {
+        return jwt.sign({ id: user.id, admin: user.admin }, process.env.REFRESH_TOKEN_SECRET_KEY, {
+            expiresIn: '7d'
+        });
+    },
     // POST: /v1/auth/login
     loginUser: async (req, res) => {
         try {
@@ -40,9 +50,17 @@ const authController = {
                 res.status(404).json("Wrong password!");
             }
             if (user && validPassword) {
-                const accessToken = jwt.sign({ id: user.id, admin: user.admin }, process.env.ACCESS_TOKEN_SECRET_KEY, {
-                    expiresIn: '60s'
-                });
+                const accessToken = authController.generateAccessToken(user);
+                const refreshToken = authController.generateRefreshToken(user);
+
+                // Save refreshToken to cookie
+                res.cookie("refreshToken", refreshToken, {
+                    httpOnly: true,
+                    secure: false,
+                    path: '/',
+                    sameSite: "strict" // Prevent attack CSRF 
+                })
+
                 const { password, ...others } = user._doc; 
                 res.status(200).json({ ...others, accessToken });
             }
