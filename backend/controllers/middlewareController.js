@@ -15,7 +15,7 @@ const middlewareController = {
                 }
             );
         } else {
-            res.status(401).json("You're not authenticated!");
+            return res.status(401).json("You're not authenticated!");
         }
     },
     verifyTokenAndAdminAuth: (req, res, next) => {
@@ -23,7 +23,7 @@ const middlewareController = {
             if (req.user.id === req.params.id || req.user.admin) {
                 next();
             } else {
-                res.status(403).json("You're not allowed to delete this user!");
+                return res.status(403).json("You're not allowed to delete this user!");
             }
         })
     }

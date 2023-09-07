@@ -14,7 +14,7 @@ const authController = {
             const hashed = await bcrypt.hash(req.body.password, salt);
 
             // Create a new user
-            const newUser = await new User({
+            const newUser = new User({
                 username: req.body.username,
                 email: req.body.email,
                 password: hashed,
@@ -23,9 +23,9 @@ const authController = {
 
             // Save to database
             const user = await newUser.save();
-            res.status(200).json(user);
+            return res.status(200).json(user);
         } catch (err) {
-            res.status(500).json(err);
+            return res.status(500).json(err);
         }
     },
     generateAccessToken: (user) => {
@@ -43,14 +43,14 @@ const authController = {
         try {
             const user = await User.findOne({ username: req.body.username })
             if (!user) {
-                res.status(404).json("Wrong username!");
+                return res.status(404).json("Wrong username!");
             }
             const validPassword = await bcrypt.compare(
                 req.body.password,
                 user.password
             );
             if (!validPassword) {
-                res.status(404).json("Wrong password!");
+                return res.status(404).json("Wrong password!");
             }
             if (user && validPassword) {
                 const accessToken = authController.generateAccessToken(user);
@@ -65,12 +65,13 @@ const authController = {
                 })
 
                 const { password, ...others } = user._doc;
-                res.status(200).json({ ...others, accessToken });
+                return res.status(200).json({ ...others, accessToken });
             }
         } catch (err) {
-            res.status(500).json(err);
+            return res.status(500).json(err);
         }
     },
+    // POST: /v1/auth/refresh
     refreshToken: async (req, res) => {
         try {
             const refreshToken = req.cookies.refreshToken;
@@ -93,12 +94,22 @@ const authController = {
                             path: '/',
                             sameSite: "strict" // Prevent attack CSRF 
                         })
-                        res.status(200).json({ accessToken: newAccessToken });
+                        return res.status(200).json({ accessToken: newAccessToken });
                     }
                 }
             )
         } catch (err) {
-            res.status(500).json(err);
+            return res.status(500).json(err);
+        }
+    },
+    // 
+    userLogout: async (req, res) => {
+        try {
+            res.clearCookie("refreshToken");
+            refreshTokens.filter(token => token !== req.cookies.refreshToken);
+            return res.status(200).json("Logout successfully!");
+        } catch (err) {
+            return res.status(500).json(err);
         }
     }
 }
