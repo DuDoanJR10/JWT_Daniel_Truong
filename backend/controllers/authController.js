@@ -102,7 +102,7 @@ const authController = {
             return res.status(500).json(err);
         }
     },
-    // 
+    // POST: /v1/auth/logout
     userLogout: async (req, res) => {
         try {
             res.clearCookie("refreshToken");

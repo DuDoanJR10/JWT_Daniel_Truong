@@ -5,7 +5,10 @@ import {
     loginSuccess, 
     registerStart, 
     registerSuccess, 
-    registerFailed 
+    registerFailed, 
+    logOutStart,
+    logOutSuccess,
+    logOutFailed
 } from './authSlice'
 import {
     getUsersStart,
@@ -60,5 +63,19 @@ export const deleteUser = async (accessToken, dispatch, id, axiosJWT) => {
         dispatch(deleteUserSuccess(res.data));
     } catch (error) {
         dispatch(deleteUserFailed(error.response?.data));
+    }
+}
+
+export const logOut = async (dispatch, id, navigate, accessToken, axiosJWT) => {
+    dispatch(logOutStart());
+    console.log('ID: ', id);
+    try {
+        await axiosJWT.post('/v1/auth/logout', id, {
+            headers: { token: `Bearer ${accessToken}`}
+        });
+        dispatch(logOutSuccess());
+        navigate('/login')
+    } catch (error) {
+        dispatch(logOutFailed(error.response?.data));
     }
 }

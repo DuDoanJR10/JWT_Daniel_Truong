@@ -37,4 +37,4 @@ export const store = configureStore({
         }),
 })
 
-export const persistor = persistStore(store);
+export const persistor = persistStore(store); // Chuyền store vào function persistStore để Redux State sẽ được lưu vào storage mỗi khi nó thay đổi
