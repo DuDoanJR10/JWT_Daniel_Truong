@@ -1,7 +1,7 @@
 const User = require('../models/User');
 
 const userController = {
-    // GET: /v1/users/
+    // GET: /v1/user/
     getAllUsers: async (req, res) => {
         try {
             // Get all users
@@ -11,7 +11,7 @@ const userController = {
             return res.status(500).json(err);
         }
     },
-    // DELETE: /v1/users/:id
+    // DELETE: /v1/user/:id
     deleteUser: async (req, res) => {
         try {
             const user = await User.findById(req.params.id);
